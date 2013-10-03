@@ -1,0 +1,56 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+require 'erb'
+
+# General settings
+VAGRANTFILE_API_VERSION = "2"
+PROJECT_NAME = "sample-project"
+
+# Proxy settings
+PROXY_USERNAME = ""
+PROXY_PASSWORD = ""
+PROXY_HOST = ""
+PROXY_PORT = ""
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+   # Set the proxy settings
+  config.env_proxy.http     = "http://" + PROXY_USERNAME + ":" + PROXY_PASSWORD + "@" + PROXY_HOST + ":" + PROXY_PORT
+  config.env_proxy.https    = "$http_proxy"
+  config.env_proxy.no_proxy = "localhost,127.0.0.1"
+  
+  # Box config
+  config.vm.box = "precise64"
+  # config.vm.box_url = "http://domain.com/path/to/above.box"
+
+  # Network settings
+  config.vm.host_name = PROJECT_NAME + "-box";
+  config.vm.network :private_network, ip: "192.168.0.10", :netmask => "255.255.0.0"
+  # config.vm.network :forwarded_port, guest: 3306, host: 3306
+  # config.vm.network :forwarded_port, guest: 9000, host: 9000
+  # config.vm.network :public_network
+
+  # Agent forwarding
+  # config.ssh.forward_agent = true
+
+  # Share folder
+  config.vm.synced_folder "project", "/vagrant/project", nfs: true
+  config.vm.synced_folder "frameworks", "/vagrant/frameworks", nfs: true
+
+  # Custom config
+  config.vm.provider :virtualbox do |vb|
+     # Don't boot with headless mode
+     # vb.gui = true
+     # Use VBoxManage to customize the VM. For example to change memory:
+     vb.customize ["modifyvm", :id, "--memory", "2048"]
+  end
+
+  # Enable provisioning through a shell script.
+  config.vm.provision :shell do |shell|
+    script_relative = "../_scripts/"
+    provision_relative     = 'provision/'
+    provision_script       = PROJECT_NAME + '.sh'
+    shell.inline = ERB.new("<% def import(file); File.read('#{script_relative}' + file); end %>" + File.read("#{provision_relative}#{provision_script}")).result
+  end
+
+end
