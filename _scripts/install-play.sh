@@ -9,6 +9,6 @@ rm -f play-2.2.0.zip
 echo "export PATH=$PATH:/vagrant/frameworks/play-2.2.0" > ~/.bashrc
 source ~/.bashrc
 
-# Test Play
+# Test
 cd /vagrant
 play "help"
